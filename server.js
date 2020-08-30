@@ -8,15 +8,18 @@ var bodyParser = require('body-parser');
 var crypto = require('crypto');
 var uuid = require('uuid');
 
-
-
-//Connect to Mysql
-const db = require('./config/connection');
-const { Console } = require("console");
-
 //create server
 const app = express();
 const port = process.env.PORT || "8000";
+
+//middleware
+app.use(cors());
+app.use(bodyParser.json()); //Accespt json params
+app.use(bodyParser.urlencoded({ extended: true }));
+
+//Connect to Mysql
+const db = require('./config/connection');
+
 
 //default gateway
 app.get('/', (req, res) => {
@@ -44,6 +47,8 @@ app.post('/product', (request, response) => {
     var p_price = post_data.price;
     var p_description = post_data.desc;
 
+    console.log(p_id);
+
 
     db.query('INSERT INTO `products` (`p_name`, `p_price`, `p_description`) VALUES (?,?,?)',
         [p_name, p_price, p_description], function (err, result, fields) {
@@ -57,7 +62,7 @@ app.post('/product', (request, response) => {
     );
 })
 
-//add cart
+//cart
 app.get('/cart', (request, response) => {
     db.query('SELECT * FROM `cart_items`',
         function (err, result, fields) {
@@ -70,15 +75,12 @@ app.get('/cart', (request, response) => {
         }
     );
 })
-
 app.post('/cart', (request, response) => {
     var post_data = request.body; //get post params
     var p_id = post_data.id;
     var p_quantity = post_data.quantity;
 
     console.log(p_id);
-
-
     db.query('INSERT INTO `cart_items` (`p_id`, `p_quantity`) VALUES (?,?)',
         [p_id, p_quantity], function (err, result, fields) {
             if (err) {
@@ -91,11 +93,37 @@ app.post('/cart', (request, response) => {
     );
 })
 
+//product
+app.get('/products', (request, response) => {
+    db.query('SELECT * FROM `products`',
+        function (err, result, fields) {
+            if (err) {
+                console.log('MySQL ERROR', err);
+                response.json('no test results yet');
+            }
+            response.json(result);
+            console.log(result);
+        }
+    );
+})
+app.post('/products', (request, response) => {
+    var post_data = request.body; //get post params
+    var p_id = post_data.id;
+    var p_quantity = post_data.quantity;
 
-//middleware
-app.use(cors());
-app.use(bodyParser.json()); //Accespt json params
-app.use(bodyParser.urlencoded({ extended: true }));
+    
+    console.log(p_id);
+    db.query('INSERT INTO `cart_items` (`p_id`, `p_quantity`) VALUES (?,?)',
+        [p_id, p_quantity], function (err, result, fields) {
+            if (err) {
+                console.log('MySQL ERROR', err);
+                response.json('no test results yet');
+            }
+            response.json(result);
+            console.log(result);
+        }
+    );
+})
 
 
 app.listen(port, () => {
